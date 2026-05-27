@@ -1,0 +1,28 @@
+# 📦 의존성 라이브러리 (절대 깃허브에 올리면 안 되는 용량 폭탄 1순위)
+
+node_modules/
+
+# 🏗️ 리액트/Vite 빌드 결과물 폴더
+
+dist/
+dist-ssr/
+build/
+
+# 🔒 환경 변수 및 비밀 키 파일
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 💻 에디터 설정 및 OS 쓰레기 파일
+
+.vscode/
+.DS_Store
+Thumbs.db
+_.suo
+_.ntvs\*
+_.njsproj
+_.sln
+\*.sw?
