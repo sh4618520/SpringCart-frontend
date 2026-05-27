@@ -6,6 +6,7 @@ interface Product {
   name: string;
   price: number;
   categoryName: string;
+  imageUrl: string;
 }
 
 interface CartItem {
@@ -86,7 +87,13 @@ function App() {
       <div style={styles.grid}>
         {products?.map((product) => (
           <div key={product.id} style={styles.card}>
-            <div style={styles.imgPlaceholder}>🎁</div>
+            <div style={styles.imgPlaceholder}>
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                style={styles.productImage}
+              />
+            </div>
             <h3 style={styles.productName}>{product.name}</h3>
             <p style={styles.category}>태그: {product.categoryName}</p>
             <p style={styles.price}>{product.price.toLocaleString()}원</p>
@@ -217,8 +224,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "50px",
     marginBottom: "15px",
+    overflow: "hidden", // 👈 내부 이미지가 상자 밖으로 삐져나가지 못하게 컷트!
+  },
+  productImage: {
+    width: "100%", // 👈 상자 가로폭에 100% 맞추기
+    height: "100%", // 👈 상자 세로폭에 100% 맞추기
+    objectFit: "cover", // 👈 중요! 이미지가 찌그러지지 않고 비율 유지하면서 상자에 꽉 차게 채우는 치트키
   },
   productName: { fontSize: "18px", margin: "10px 0", color: "#fff" },
   category: { fontSize: "14px", color: "#aaa", margin: "5px 0" },
@@ -286,7 +298,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   cartItemRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     padding: "12px 0",
     borderBottom: "1px solid #eee",
   },
