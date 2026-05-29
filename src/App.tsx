@@ -66,6 +66,50 @@ function App() {
       });
   };
 
+  const handleUpdateQuantity = (
+    cartItemId: number,
+    currentQuantity: number,
+    delta: number,
+  ) => {
+    const newQuantity = currentQuantity + delta;
+
+    if (newQuantity < 1) {
+      alert("수량은 최소 1개 이상이어야 합니다.");
+      return;
+    }
+
+    axios
+      .put(
+        `http://localhost:8080/api/carts/${cartItemId}?quantity=${newQuantity}`,
+      )
+      .then((response) => {
+        fetchCartItems(); //장바구니 동기화
+      })
+      .catch((error) => {
+        console.error("수량 업데이트 실패 :", error);
+        alert("수량 업데이트 중 오류가 발생했습니다.");
+      });
+  };
+
+  const handelRemoveFromCart = (cartItemId: number, productName: string) => {
+    if (
+      !window.confirm(`⚠️ [${productName}] 장바구니에서 정말 삭제하시겠습니까?`)
+    ) {
+      return; // 사용자가 취소를 누르면 함수 종료
+    }
+
+    axios
+      .delete(`http://localhost:8080/api/carts/${cartItemId}`)
+      .then((response) => {
+        alert("🗑️ 장바구니에서 상품이 제거되었습니다.");
+        fetchCartItems(); //장바구니 동기화
+      })
+      .catch((error) => {
+        console.error("장바구니 제거 실패 :", error);
+        alert("삭제 중 오류가 발생했습니다.");
+      });
+  };
+
   // 장바구니 총금액 합산
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -78,7 +122,7 @@ function App() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>🛒 주말 코딩 쇼핑몰 🛒</h1>
+        <h1 style={styles.title}>🛒 코딩 쇼핑몰 🛒</h1>
         <button style={styles.cartButton} onClick={() => setIsCartOpen(true)}>
           💼 내 장바구니 ({cartItems.length})
         </button>
@@ -135,22 +179,119 @@ function App() {
               ) : (
                 cartItems.map((item) => (
                   <div key={item.cartItemId} style={styles.cartItemRow}>
-                    <div>
-                      <div style={{ fontWeight: "bold", color: "#222" }}>
-                        {item.productName}
-                      </div>
+                    {/* 1. 왼쪽: 상품명, 가격, 수량 정보 */}
+                    <div
+                      style={{
+                        flex: 1,
+                        paddingRight: "15px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "center",
+                      }}
+                    >
                       <div
                         style={{
-                          color: "#666",
-                          fontSize: "14px",
-                          marginTop: "4px",
+                          fontWeight: "600",
+                          color: "#222",
+                          fontSize: "16px",
+                          lineHeight: "1.2",
+                          marginBottom: "6px",
                         }}
                       >
-                        {item.price.toLocaleString()}원 x {item.quantity}개
+                        {item.productName}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "13px",
+                            color: "#555",
+                            marginRight: "4px",
+                          }}
+                        >
+                          {item.price.toLocaleString()}원 x
+                        </span>
+
+                        {/* 마이너스 버튼 */}
+                        <button
+                          style={styles.qtyButton}
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.cartItemId,
+                              item.quantity,
+                              -1,
+                            )
+                          }
+                        >
+                          -
+                        </button>
+
+                        {/* 현재 수량 표시 */}
+                        <span
+                          style={{
+                            fontWeight: "600",
+                            color: "#333",
+                            fontSize: "14px",
+                            minWidth: "16px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {item.quantity}
+                        </span>
+
+                        {/* 플러스 버튼 */}
+                        <button
+                          style={styles.qtyButton}
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.cartItemId,
+                              item.quantity,
+                              1,
+                            )
+                          }
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
-                    <div style={{ fontWeight: "bold", color: "#ff4757" }}>
-                      {(item.price * item.quantity).toLocaleString()}원
+
+                    {/* 2. 오른쪽: 삭제 버튼 및 총 금액 */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        minWidth: "120px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: "700",
+                          color: "#ff4757",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {(item.price * item.quantity).toLocaleString()}원
+                      </div>
+                      <button
+                        style={styles.deleteButton}
+                        onClick={() =>
+                          handelRemoveFromCart(
+                            item.cartItemId,
+                            item.productName,
+                          )
+                        }
+                        title="장바구니에서 삭제"
+                      >
+                        ❌
+                      </button>
                     </div>
                   </div>
                 ))
@@ -250,6 +391,34 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: "bold",
     cursor: "pointer",
   },
+  qtyButton: {
+    backgroundColor: "#f1f2f6",
+    border: "none",
+    color: "#333",
+    fontSize: "12px",
+    fontWeight: "bold",
+    width: "22px",
+    height: "22px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "background-color 0.2s",
+  },
+  deleteButton: {
+    background: "none",
+    border: "none",
+    fontSize: "16px",
+    cursor: "pointer",
+    padding: "6px",
+    borderRadius: "50%", // 👈 둥근 원형 베이스로 변경
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s ease",
+    marginLeft: "10px",
+  },
   loading: {
     textAlign: "center",
     fontSize: "24px",
@@ -298,8 +467,8 @@ const styles: { [key: string]: React.CSSProperties } = {
   cartItemRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: "12px 0",
+    alignItems: "center", // 👈 세로축 무조건 정중앙 정렬 고정!
+    padding: "16px 0",
     borderBottom: "1px solid #eee",
   },
   modalFooter: {
